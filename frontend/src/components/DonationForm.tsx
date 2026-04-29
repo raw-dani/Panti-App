@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { donationsApi } from '../api';
-import type { Donation } from '../types';
-import { X, Save, Calendar, DollarSign, Mail, Phone, Briefcase } from 'lucide-react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { donationsApi, donorsApi } from '../api';
+import type { Donation, Donor } from '../types';
+import { X, Save, Calendar, DollarSign, Mail, Phone, Briefcase, Search, User, ChevronDown, Loader2 } from 'lucide-react';
 
 interface DonationFormProps {
   donation?: Donation | null;
@@ -12,6 +12,7 @@ interface DonationFormProps {
 
 const DonationForm = ({ donation, onClose, onSuccess }: DonationFormProps) => {
   const [formData, setFormData] = useState({
+    donor_id: '',
     donor_name: '',
     donor_email: '',
     donor_phone: '',
@@ -21,11 +22,23 @@ const DonationForm = ({ donation, onClose, onSuccess }: DonationFormProps) => {
     date_received: '',
     receipt_no: '',
   });
+  const [donorSearch, setDonorSearch] = useState('');
+  const [showDonorDropdown, setShowDonorDropdown] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const { data: donorResultsData, isFetching: isFetchingDonors } = useQuery({
+    queryKey: ['donors-search', donorSearch],
+    queryFn: () => donorsApi.getAll({ search: donorSearch }),
+    enabled: donorSearch.length > 1 && showDonorDropdown,
+    placeholderData: previousData => previousData,
+  });
+
+  const donorResults = Array.isArray(donorResultsData) ? donorResultsData : (donorResultsData?.data || []);
 
   useEffect(() => {
     if (donation) {
       setFormData({
+        donor_id: donation.donor_id?.toString() || '',
         donor_name: donation.donor_name,
         donor_email: donation.donor_email || '',
         donor_phone: donation.donor_phone || '',
@@ -35,9 +48,11 @@ const DonationForm = ({ donation, onClose, onSuccess }: DonationFormProps) => {
         date_received: new Date(donation.date_received).toISOString().split('T')[0],
         receipt_no: donation.receipt_no,
       });
+      setDonorSearch(donation.donor_name);
     } else {
       // Set default date to today for new donations
       setFormData({
+        donor_id: '',
         donor_name: '',
         donor_email: '',
         donor_phone: '',
@@ -47,8 +62,34 @@ const DonationForm = ({ donation, onClose, onSuccess }: DonationFormProps) => {
         date_received: new Date().toISOString().split('T')[0],
         receipt_no: '', // Will be generated automatically
       });
+      setDonorSearch('');
     }
   }, [donation]);
+
+  const handleDonorSelect = (donor: Donor) => {
+    setFormData({
+      ...formData,
+      donor_id: donor.id.toString(),
+      donor_name: donor.name,
+      donor_email: donor.email || '',
+      donor_phone: donor.phone || '',
+    });
+    setDonorSearch(donor.name);
+    setShowDonorDropdown(false);
+  };
+
+  const handleDonorInputClick = () => {
+    setShowDonorDropdown(true);
+  };
+
+  const handleDonorInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setDonorSearch(value);
+    setFormData({ ...formData, donor_name: value });
+    if (value.length > 1) {
+      setShowDonorDropdown(true);
+    }
+  };
 
   const createMutation = useMutation({
     mutationFn: donationsApi.create,
@@ -60,35 +101,36 @@ const DonationForm = ({ donation, onClose, onSuccess }: DonationFormProps) => {
     onSuccess: onSuccess,
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const newErrors: Record<string, string> = {};
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      const newErrors: Record<string, string> = {};
 
-    if (!formData.donor_name.trim()) newErrors.donor_name = 'Nama donatur wajib diisi';
-    if (!formData.amount.trim() || parseFloat(formData.amount) <= 0) newErrors.amount = 'Jumlah donation harus lebih dari 0';
-    if (!formData.date_received) newErrors.date_received = 'Tanggal terima wajib';
+      if (!formData.donor_name.trim()) newErrors.donor_name = 'Nama donatur wajib diisi';
+      if (!formData.amount.trim() || parseFloat(formData.amount) <= 0) newErrors.amount = 'Jumlah donation harus lebih dari 0';
+      if (!formData.date_received) newErrors.date_received = 'Tanggal terima wajib';
 
-    setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) return;
+      setErrors(newErrors);
+      if (Object.keys(newErrors).length > 0) return;
 
-    const donationData: Partial<Donation> = {
-      donor_name: formData.donor_name,
-      donor_email: formData.donor_email || undefined,
-      donor_phone: formData.donor_phone || undefined,
-      amount: parseFloat(formData.amount),
-      type: formData.type,
-      description: formData.description || undefined,
-      date_received: formData.date_received,
-      // receipt_no will be generated by backend if not provided
+      const donationData: Partial<Donation> = {
+        donor_id: formData.donor_id ? parseInt(formData.donor_id) : undefined,
+        donor_name: formData.donor_name,
+        donor_email: formData.donor_email || undefined,
+        donor_phone: formData.donor_phone || undefined,
+        amount: parseFloat(formData.amount),
+        type: formData.type,
+        description: formData.description || undefined,
+        date_received: formData.date_received,
+        // receipt_no will be generated by backend if not provided
+      };
+
+      if (donation) {
+        await updateMutation.mutateAsync(donationData);
+      } else {
+        await createMutation.mutateAsync(donationData);
+      }
+      onSuccess();
     };
-
-    if (donation) {
-      await updateMutation.mutateAsync(donationData);
-    } else {
-      await createMutation.mutateAsync(donationData);
-    }
-    onSuccess();
-  };
 
   const isLoading = createMutation.isPending || updateMutation.isPending;
 
@@ -109,17 +151,47 @@ const DonationForm = ({ donation, onClose, onSuccess }: DonationFormProps) => {
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Nama Donatur *</label>
-              <input
-                type="text"
-                value={formData.donor_name}
-                onChange={(e) => setFormData({ ...formData, donor_name: e.target.value })}
-                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
-                  errors.donor_name ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Nama lengkap donatur"
-                required
-              />
+              <label className="block text-sm font-medium text-gray-700 mb-2">Donatur *</label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  value={donorSearch}
+                  onChange={handleDonorInputChange}
+                  onFocus={handleDonorInputClick}
+                  className={`w-full pl-10 p-3 pr-10 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                    errors.donor_name ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                  placeholder="Cari nama donor atau ketik baru..."
+                />
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                {showDonorDropdown && (
+                  <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-auto">
+                    {isFetchingDonors && (
+                      <div className="p-4 text-center text-gray-500 flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Mencari...
+                      </div>
+                    )}
+                    {donorResults.length === 0 && !isFetchingDonors && donorSearch.length > 1 && (
+                      <div className="p-4 text-gray-500 text-sm text-center">
+                        Donor tidak ditemukan
+                      </div>
+                    )}
+                    {donorResults.map((d: Donor) => (
+                      <button
+                        key={d.id}
+                        type="button"
+                        onClick={() => handleDonorSelect(d)}
+                        className="w-full text-left p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 flex items-center gap-3"
+                      >
+                        <div className="font-medium text-gray-900">{d.name}</div>
+                        <div className="text-sm text-gray-500">{d.email || d.phone || 'Tanpa kontak'}</div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               {errors.donor_name && <p className="text-red-500 text-sm mt-1">{errors.donor_name}</p>}
             </div>
 
@@ -129,12 +201,10 @@ const DonationForm = ({ donation, onClose, onSuccess }: DonationFormProps) => {
                 type="email"
                 value={formData.donor_email}
                 onChange={(e) => setFormData({ ...formData, donor_email: e.target.value })}
-                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
-                  errors.donor_email ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                 placeholder="email@donatur.com"
+                disabled
               />
-              {errors.donor_email && <p className="text-red-500 text-sm mt-1">{errors.donor_email}</p>}
             </div>
           </div>
 

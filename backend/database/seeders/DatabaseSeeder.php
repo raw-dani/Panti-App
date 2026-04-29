@@ -27,6 +27,8 @@ class DatabaseSeeder extends Seeder
             'role' => 'admin',
         ]);
 
+        \App\Models\Donor::factory(20)->create();
         // Skip orphan factory for now - users created above
     }
+
 }

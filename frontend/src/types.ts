@@ -108,11 +108,32 @@ export interface OrphanFamilyContact {
     notes?: string;
 }
 
+export interface Donor {
+    id: number;
+    name: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+    city?: string;
+    postal_code?: string;
+    tax_id?: string;
+    preferred_contact_method: 'email' | 'phone' | 'mail';
+    notes?: string;
+    is_active: boolean;
+    total_donations?: number;
+    total_amount?: number;
+    donations?: Donation[];
+    created_at?: string;
+    updated_at?: string;
+}
+
 export interface Donation {
     id: number;
+    donor_id?: number;
     donor_name: string;
     donor_email?: string;
     donor_phone?: string;
+    donor?: Donor;
     amount: number;
     type: 'cash' | 'goods';
     description?: string;

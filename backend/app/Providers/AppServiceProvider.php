@@ -25,6 +25,14 @@ class AppServiceProvider extends ServiceProvider
             \App\Domain\Donation\Repositories\EloquentDonationRepository::class
         );
         $this->app->bind(
+            \App\Domain\Donation\Repositories\DonorRepositoryInterface::class,
+            \App\Domain\Donation\Repositories\EloquentDonorRepository::class
+        );
+        $this->app->singleton(
+            \App\Domain\Donation\Services\DonorService::class,
+            \App\Domain\Donation\Services\DonorService::class
+        );
+        $this->app->bind(
             \App\Domain\Orphan\Services\OrphanService::class,
             \App\Domain\Orphan\Services\OrphanService::class
         );

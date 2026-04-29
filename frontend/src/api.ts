@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Orphan, OrphanMedicalRecord, OrphanEducationRecord, OrphanFamilyContact, LoginResponse, ApiResponse, User, Staff, Donation } from './types';
+import type { Orphan, OrphanMedicalRecord, OrphanEducationRecord, OrphanFamilyContact, LoginResponse, ApiResponse, User, Staff, Donation, Donor } from './types';
 
 const API_BASE = 'http://127.0.0.1:8000/api';
 
@@ -26,11 +26,10 @@ api.interceptors.request.use((config) => {
 
 export const orphansApi = {
   getAll: (filters = {}): Promise<ApiResponse<Orphan[]>> => api.get('/orphans', { params: filters }).then(res => res.data),
-  create: (data: FormData): Promise<ApiResponse<Orphan>> => api.post('/orphans', data, { headers: { 'Content-Type': 'multipart/form-data' }}).then(res => res.data),
+  create: (data: FormData): Promise<ApiResponse<Orphan>> => api.post('/orphans', data).then(res => res.data),
   getById: (id: number): Promise<Orphan> => api.get(`/orphans/${id}`).then(res => res.data),
   update: (id: number, data: FormData): Promise<ApiResponse> => api.post(`/orphans/${id}`, data, {
     headers: {
-      'Content-Type': 'multipart/form-data',
       'X-HTTP-Method-Override': 'PUT'
     },
   }).then(res => res.data),
@@ -90,6 +89,14 @@ export const authApi = {
    logout: (): Promise<ApiResponse> => api.post('/logout').then(res => res.data),
    getUser: (): Promise<User> => api.get('/user').then(res => res.data),
    getUsers: (): Promise<User[]> => api.get('/users').then(res => res.data),
+};
+
+export const donorsApi = {
+    getAll: (filters = {}): Promise<ApiResponse<Donor[]>> => api.get('/donors', { params: filters }).then(res => res.data),
+    create: (data: Partial<Donor>): Promise<ApiResponse<Donor>> => api.post('/donors', data).then(res => res.data),
+    getById: (id: number): Promise<Donor> => api.get(`/donors/${id}`).then(res => res.data),
+    update: (id: number, data: Partial<Donor>): Promise<ApiResponse<Donor>> => api.put(`/donors/${id}`, data).then(res => res.data),
+    delete: (id: number): Promise<ApiResponse> => api.delete(`/donors/${id}`).then(res => res.data),
 };
 
 export const donationsApi = {

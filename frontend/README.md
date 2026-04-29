@@ -1,5 +1,13 @@
 Fitur Lengkap Aplikasi Management Panti Asuhan (Orphanage Management System)
 
+## 🚀 Akun Demo Login
+| Role   | Email               | Password  |
+|--------|---------------------|-----------|
+| Admin  | `admin@panti.com`   | `password`|
+| Staff  | `staff@panti.com`   | `password`|
+
+> Catatan: Hanya Admin yang bisa menambah/menghapus user dan staff
+
 Berdasarkan struktur proyek saat ini (Orphan/Staff/Donation/Adoption/Event/Report models), berikut fitur core + recommended grouped by module:
 
 1. Core Authentication & Admin (Sudah Ada/Complete)

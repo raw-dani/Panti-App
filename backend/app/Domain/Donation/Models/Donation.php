@@ -6,12 +6,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Domain\Staff\Models\Staff;
+use App\Models\Donor;
 
 class Donation extends Model
 {
     use HasFactory;
 
     protected $fillable = [
+        'donor_id',
         'donor_name',
         'donor_email',
         'donor_phone',
@@ -31,6 +33,11 @@ class Donation extends Model
     public function staff(): BelongsTo
     {
         return $this->belongsTo(Staff::class);
+    }
+
+    public function donor(): BelongsTo
+    {
+        return $this->belongsTo(Donor::class);
     }
 }
 

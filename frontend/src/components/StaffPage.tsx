@@ -1221,31 +1221,29 @@ const PayrollFormModal = ({ payroll, staffSalary, onClose, onSubmit, isPending }
   const [formData, setFormData] = useState<Partial<StaffPayroll>>({
     month: payroll?.month || new Date().getMonth() + 1,
     year: payroll?.year || new Date().getFullYear(),
-    base_salary: payroll?.base_salary || staffSalary,
-    bonus: payroll?.bonus || 0,
-    deductions: payroll?.deductions || 0,
-    total: payroll?.total || staffSalary,
+    base_salary: payroll?.base_salary ?? staffSalary,
+    bonus: payroll?.bonus ?? 0,
+    deductions: payroll?.deductions ?? 0,
+    total: payroll?.total ?? staffSalary,
     status: payroll?.status || 'draft',
     notes: payroll?.notes || '',
   });
 
   // Calculate total
   const calculateTotal = (baseSalary: number, bonus: number, deductions: number) => {
-    return (baseSalary || 0) + (bonus || 0) - (deductions || 0);
+    return (Number(baseSalary) || 0) + (Number(bonus) || 0) - (Number(deductions) || 0);
   };
 
   // Update form data with calculated total
   const updateFormData = (updates: Partial<StaffPayroll>) => {
     setFormData(prev => {
       const newData = { ...prev, ...updates };
-      // Always recalculate total when financial fields change
-      if ('base_salary' in updates || 'bonus' in updates || 'deductions' in updates) {
-        newData.total = calculateTotal(
-          newData.base_salary || 0,
-          newData.bonus || 0,
-          newData.deductions || 0
-        );
-      }
+      // ALWAYS recalculate total on every update
+      newData.total = calculateTotal(
+        newData.base_salary ?? 0,
+        newData.bonus ?? 0,
+        newData.deductions ?? 0
+      );
       return newData;
     });
   };

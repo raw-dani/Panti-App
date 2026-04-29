@@ -255,12 +255,12 @@ const DonationsPage = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm font-medium text-gray-900">{donation.donor_name}</div>
+                        <div className="text-sm font-medium text-gray-900">{donation.donor?.name || donation.donor_name}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap hidden lg:table-cell text-sm text-gray-500">
-                        {donation.donor_email || '-'}</td>
+                        {donation.donor?.email || donation.donor_email || '-'} </td>
                       <td className="px-6 py-4 whitespace-nowrap hidden lg:table-cell text-sm text-gray-500">
-                        {donation.donor_phone || '-'}</td>
+                        {donation.donor?.phone || donation.donor_phone || '-'} </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 py-1 text-xs rounded-full font-medium ${
                           donation.type === 'cash'

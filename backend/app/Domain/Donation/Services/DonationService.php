@@ -29,8 +29,24 @@ class DonationService
         // Ensure staff_id is set from authenticated user if not provided
         if (!isset($data['staff_id'])) {
             $user = Auth::user();
-            if ($user && isset($user->staff->id)) {
-                $data['staff_id'] = $user->staff->id;
+            if ($user) {
+                // Untuk user staff: ambil id staff
+                if (isset($user->staff->id)) {
+                    $data['staff_id'] = $user->staff->id;
+                } 
+                // Untuk user admin: cari staff yang terhubung dengan user ini
+                else {
+                    $staff = \App\Domain\Staff\Models\Staff::where('user_id', $user->id)->first();
+                    if ($staff) {
+                        $data['staff_id'] = $staff->id;
+                    } else {
+                        // Jika tidak ditemukan staff untuk user ini, gunakan staff pertama sebagai fallback default
+                        $defaultStaff = \App\Domain\Staff\Models\Staff::first();
+                        if ($defaultStaff) {
+                            $data['staff_id'] = $defaultStaff->id;
+                        }
+                    }
+                }
             }
         }
         

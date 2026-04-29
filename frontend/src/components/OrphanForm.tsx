@@ -84,6 +84,7 @@ const OrphanForm = ({ orphan, onClose, onSuccess }: OrphanFormProps) => {
     if (!formData.gender) newErrors.gender = 'Pilih gender';
     if (!formData.birth_date) newErrors.birth_date = 'Tanggal lahir wajib';
     if (!formData.religion.trim()) newErrors.religion = 'Agama wajib';
+    if (!formData.parent_status.trim()) newErrors.parent_status = 'Status keluarga wajib diisi';
     if (!formData.entry_date) newErrors.entry_date = 'Tanggal masuk wajib';
 
     setErrors(newErrors);
@@ -220,14 +221,17 @@ const OrphanForm = ({ orphan, onClose, onSuccess }: OrphanFormProps) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Status Keluarga</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Status Keluarga *</label>
               <input
                 type="text"
                 value={formData.parent_status}
                 onChange={(e) => setFormData({ ...formData, parent_status: e.target.value })}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                  errors.parent_status ? 'border-red-500' : 'border-gray-300'
+                }`}
                 placeholder="Yatim piatu / yatim / dhuafa"
               />
+              {errors.parent_status && <p className="text-red-500 text-sm mt-1">{errors.parent_status}</p>}
             </div>
           </div>
 

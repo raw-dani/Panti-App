@@ -65,6 +65,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Donations
     Route::apiResource('donations', \App\Http\Controllers\Api\DonationController::class);
 
+    // Donor Management
+    Route::apiResource('donors', \App\Http\Controllers\Api\DonorController::class);
+
     // Dashboard Stats
     Route::get('/dashboard/stats', [\App\Http\Controllers\Api\DashboardController::class, 'stats']);
 });
